@@ -14,17 +14,13 @@ namespace IntegerDataStructures
             node = new ProtoVanEmdeBoasNode<T>(this.capacity);
         }
 
-        public bool Insert(int key, T val)
-        {
-            return node.Insert(key, val);
-        }
+        public bool Insert(int key, T val) => node.Insert(key, val);
 
-        public T Find(int key)
-        {
-            return node.Find(key);
-        }
+        public T GetValue(int key) => node.GetValue(key);
 
-        public int Size => node.Size;
+        public bool Delete(int key) => node.Delete(key);
+
+        public int Count => node.Count;
 
         private static int GetCapacity(int requiredCapacity)
         {

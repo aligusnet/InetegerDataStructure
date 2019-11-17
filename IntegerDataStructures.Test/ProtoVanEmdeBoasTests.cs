@@ -2,7 +2,7 @@ using Xunit;
 
 namespace IntegerDataStructures.Test
 {
-    public class ProtoVanEmdeBoas
+    public class ProtoVanEmdeBoasTests
     {
         [Fact]
         public void DeconstructKeyTest()
@@ -26,18 +26,30 @@ namespace IntegerDataStructures.Test
             var tree = new ProtoVanEmdeBoasTree<string>(111);
 
             Assert.True(tree.Insert(79, "value 79"));
-            Assert.Equal("value 79", tree.Find(79));
+            Assert.Equal("value 79", tree.GetValue(79));
 
             Assert.False(tree.Insert(79, "value 79 - 2"));
-            Assert.Equal("value 79 - 2", tree.Find(79));
+            Assert.Equal("value 79 - 2", tree.GetValue(79));
 
             Assert.True(tree.Insert(16, "value 16"));
-            Assert.Equal("value 16", tree.Find(16));
+            Assert.Equal("value 16", tree.GetValue(16));
 
-            Assert.Equal(2, tree.Size);
+            Assert.Equal(2, tree.Count);
 
-            var intTree = new ProtoVanEmdeBoasTree<int>(111);
-            Assert.True(intTree.Insert(79, 10079));
+            Assert.False(tree.Delete(20));
+            Assert.Equal(2, tree.Count);
+
+            Assert.True(tree.Delete(16));
+            Assert.Equal(1, tree.Count);
+
+            Assert.False(tree.Delete(16));
+            Assert.Equal(1, tree.Count);
+
+            Assert.True(tree.Delete(79));
+            Assert.Equal(0, tree.Count);
+
+            Assert.False(tree.Delete(79));
+            Assert.Equal(0, tree.Count);
         }
 
         [Fact]
@@ -45,19 +57,19 @@ namespace IntegerDataStructures.Test
         {
             var tree = new ProtoVanEmdeBoasTree<int>(2);
 
-            Assert.Equal(0, tree.Size);
+            Assert.Equal(0, tree.Count);
 
             Assert.True(tree.Insert(0, 100));
-            Assert.Equal(100, tree.Find(0));
-            Assert.Equal(1, tree.Size);
+            Assert.Equal(100, tree.GetValue(0));
+            Assert.Equal(1, tree.Count);
 
             Assert.False(tree.Insert(0, 10));
-            Assert.Equal(10, tree.Find(0));
-            Assert.Equal(1, tree.Size);
+            Assert.Equal(10, tree.GetValue(0));
+            Assert.Equal(1, tree.Count);
 
             Assert.True(tree.Insert(1, 20));
-            Assert.Equal(20, tree.Find(1));
-            Assert.Equal(2, tree.Size);
+            Assert.Equal(20, tree.GetValue(1));
+            Assert.Equal(2, tree.Count);
         }
     }
 }

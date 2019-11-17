@@ -27,7 +27,7 @@ namespace IntegerDataStructures
             this.size = 0;
         }
 
-        public int Size
+        public int Count
         {
             get
             {
@@ -57,15 +57,15 @@ namespace IntegerDataStructures
         {
             if (data != null)  // Leaf case
             {
-                bool inserted = (size & LeafSizeMasks[key]) != LeafSizeMasks[key];
+                bool toBeInserted = !ContainsInLeaf(key);
                 data[key] = val;
                 size |= LeafSizeMasks[key];
-                return inserted;
+                return toBeInserted;
             }
             else if (clusters != null && summary != null)
             {
                 var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
-                summary.Insert(KeyInCluster, 1);
+                summary.Insert(ClusterIndex, 1);
                 bool insered = clusters[ClusterIndex].Insert(KeyInCluster, val);
                 if (insered)
                 {
@@ -78,7 +78,7 @@ namespace IntegerDataStructures
             throw new Exception("ProtoVanEmdeBoasNode is invalid");
         }
 
-        public T Find(int key)
+        public T GetValue(int key)
         {
             if (data != null)   // Leaf case
             {
@@ -87,15 +87,53 @@ namespace IntegerDataStructures
             else if (clusters != null && summary != null)
             {
                 var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
-                return clusters[ClusterIndex].Find(KeyInCluster);
+                return clusters[ClusterIndex].GetValue(KeyInCluster);
             }
 
             throw new Exception("ProtoVanEmdeBoasNode is invalid");
         }
 
-        private ProtoVanEmdeBoasNode<byte>? summary;
-        private ProtoVanEmdeBoasNode<T>[]? clusters;
-        private T[]? data;
+        public bool Delete(int key)
+        {
+            if (data != null)   // Leaf case
+            {
+                bool toBeDeleted = ContainsInLeaf(key);
+                if (toBeDeleted)
+                {
+                    data[key] = default!;
+                    size &= ~LeafSizeMasks[key];
+                }
+
+                return toBeDeleted;
+            }
+            else if (clusters != null && summary != null)
+            {
+                var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
+                bool deleted = clusters[ClusterIndex].Delete(KeyInCluster);
+                if (deleted)
+                {
+                    size--;
+
+                    if (clusters[ClusterIndex].Count == 0)
+                    {
+                        summary.Insert(ClusterIndex, 0);
+                    }
+                }
+
+                return deleted;
+            }
+
+            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+        }
+
+        private bool ContainsInLeaf(int key)
+        {
+            return (size & LeafSizeMasks[key]) == LeafSizeMasks[key];
+        }
+
+        private readonly ProtoVanEmdeBoasNode<byte>? summary;
+        private readonly ProtoVanEmdeBoasNode<T>[]? clusters;
+        private readonly T[]? data;
         private int size;
 
         public static (int ClusterIndex, int KeyInCluster) DeconstructKey(int key)
