@@ -20,7 +20,17 @@ namespace IntegerDataStructures
 
         public bool Delete(int key) => node.Delete(key);
 
+        public int? MinimumKey => node.MinimumKey();
+
+        public int? MaximumKey => node.MaximumKey();
+
+        public int? NextKey(int key) => node.NextKey(key);
+
+        public int? PreviousKey(int key) => node.PreviousKey(key);
+
         public int Count => node.Count;
+
+        public int Capacity => capacity;
 
         private static int GetCapacity(int requiredCapacity)
         {

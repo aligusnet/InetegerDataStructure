@@ -17,7 +17,7 @@ namespace IntegerDataStructures
             {
                 int childCapacity = Sqrt(capacity);
                 summary = new ProtoVanEmdeBoasNode<byte>(childCapacity);
-                clusters = new ProtoVanEmdeBoasNode<T>[capacity];
+                clusters = new ProtoVanEmdeBoasNode<T>[childCapacity];
                 for (int i = 0; i < childCapacity; ++i)
                 {
                     clusters[i] = new ProtoVanEmdeBoasNode<T>(childCapacity);
@@ -47,6 +47,21 @@ namespace IntegerDataStructures
             }
         }
 
+        public int Capacity
+        {
+            get
+            {
+                if (clusters != null)
+                {
+                    return clusters.Length * clusters.Length;
+                }
+                else  // Leaf case
+                {
+                    return 2;
+                }
+            }
+        }
+
         /// <summary>
         /// Insert new value into the tree
         /// </summary>
@@ -64,9 +79,9 @@ namespace IntegerDataStructures
             }
             else if (clusters != null && summary != null)
             {
-                var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
-                summary.Insert(ClusterIndex, 1);
-                bool insered = clusters[ClusterIndex].Insert(KeyInCluster, val);
+                var (clusterIndex, keyInCluster) = DeconstructKey(key, clusters.Length);
+                summary.Insert(clusterIndex, 1);
+                bool insered = clusters[clusterIndex].Insert(keyInCluster, val);
                 if (insered)
                 {
                     size++;
@@ -86,8 +101,8 @@ namespace IntegerDataStructures
             }
             else if (clusters != null && summary != null)
             {
-                var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
-                return clusters[ClusterIndex].GetValue(KeyInCluster);
+                var (clusterIndex, keyInCluster) = DeconstructKey(key, clusters.Length);
+                return clusters[clusterIndex].GetValue(keyInCluster);
             }
 
             throw new Exception("ProtoVanEmdeBoasNode is invalid");
@@ -108,15 +123,15 @@ namespace IntegerDataStructures
             }
             else if (clusters != null && summary != null)
             {
-                var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
-                bool deleted = clusters[ClusterIndex].Delete(KeyInCluster);
+                var (clusterIndex, keyInCluster) = DeconstructKey(key, clusters.Length);
+                bool deleted = clusters[clusterIndex].Delete(keyInCluster);
                 if (deleted)
                 {
                     size--;
 
-                    if (clusters[ClusterIndex].Count == 0)
+                    if (clusters[clusterIndex].Count == 0)
                     {
-                        summary.Insert(ClusterIndex, 0);
+                        summary.Delete(clusterIndex);
                     }
                 }
 
@@ -124,6 +139,157 @@ namespace IntegerDataStructures
             }
 
             throw new Exception("ProtoVanEmdeBoasNode is invalid");
+        }
+
+        public int? MinimumKey()
+        {
+            if (data != null)   // Leaf case
+            {
+                if (ContainsInLeaf(0))
+                {
+                    return 0;
+                }
+                else if (ContainsInLeaf(1))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (clusters != null && summary != null)
+            {
+                var clusterIndex = summary.MinimumKey();
+                if (clusterIndex != null)
+                {
+                    var offset = clusters[clusterIndex.Value].MinimumKey();
+                    if (offset != null)
+                    {
+                        return ConstructKey(clusterIndex.Value, offset.Value, clusters.Length);
+                    }
+                }
+
+                return null;
+            }
+
+            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+        }
+
+        public int? MaximumKey()
+        {
+            if (data != null)   // Leaf case
+            {
+                if (ContainsInLeaf(1))
+                {
+                    return 1;
+                }
+                else if (ContainsInLeaf(0))
+                {
+                    return 0;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (clusters != null && summary != null)
+            {
+                var clusterIndex = summary.MaximumKey();
+                if (clusterIndex == null)
+                {
+                    return null;
+                }
+
+                var offset = clusters[clusterIndex.Value].MaximumKey();
+                if (offset == null)
+                {
+                    return null;
+                }
+
+                return ConstructKey(clusterIndex.Value, offset.Value, clusters.Length);
+            }
+
+            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+        }
+
+        public int? NextKey(int key)
+        {
+            if (data != null)   // Leaf case
+            {
+                if (key == 0 && ContainsInLeaf(1))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (clusters != null && summary != null)
+            {
+                var (clusterIndex, keyInCluster) = DeconstructKey(key, clusters.Length);
+                var offset = clusters[clusterIndex].NextKey(keyInCluster);
+                if (offset != null)
+                {
+                    return ConstructKey(clusterIndex, offset.Value, clusters.Length);
+                }
+                else
+                {
+                    var nextCluster = summary.NextKey(clusterIndex);
+                    if (nextCluster != null)
+                    {
+                        offset = clusters[nextCluster.Value].MinimumKey();
+                        if (offset != null) // Invariant: Must be not null
+                        {
+                            return ConstructKey(nextCluster.Value, offset.Value, clusters.Length);
+                        }
+                    }
+
+                    return null;
+                }
+            }
+
+            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+        }
+
+        public int? PreviousKey(int key)
+        {
+            if (data != null)   // Leaf case
+            {
+                if (key == 1 && ContainsInLeaf(0))
+                {
+                    return 0;
+                }
+
+                return null;
+            }
+            else if (clusters != null && summary != null)
+            {
+                var (clusterIndex, keyInCluster) = DeconstructKey(key, clusters.Length);
+                var offset = clusters[clusterIndex].PreviousKey(keyInCluster);
+
+                if (offset != null)
+                {
+                    return ConstructKey(clusterIndex, offset.Value, clusters.Length);
+                }
+
+                var prevCluster = summary.PreviousKey(clusterIndex);
+                if (prevCluster == null)  // Invariant: Must be not null
+                {
+                    return null;
+                }
+
+                offset = clusters[prevCluster.Value].MaximumKey();
+                if (offset == null)
+                {
+                    return null;
+                }
+
+                return ConstructKey(prevCluster.Value, offset.Value, clusters.Length);
+            }
+
+            throw new Exception("ProtoVanEmdeBoasNode is invalid");  // Precondition
         }
 
         private bool ContainsInLeaf(int key)
@@ -136,12 +302,16 @@ namespace IntegerDataStructures
         private readonly T[]? data;
         private int size;
 
-        public static (int ClusterIndex, int KeyInCluster) DeconstructKey(int key)
+        public static (int clusterIndex, int keyInCluster) DeconstructKey(int key, int universeSqrtSize)
         {
-            int sqrt = Sqrt(key);
-            int high = key / sqrt;
-            int low = key % sqrt;
+            int high = key / universeSqrtSize;
+            int low = key % universeSqrtSize;
             return (high, low);
+        }
+
+        public static int ConstructKey(int clusterIndex, int keyInCluster, int universeSqrtSize)
+        {
+            return clusterIndex * universeSqrtSize + keyInCluster;
         }
 
         public static int Sqrt(int value)
