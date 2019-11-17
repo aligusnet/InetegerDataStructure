@@ -1,25 +1,48 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace IntegerDataStructures
 {
     public class ProtoVanEmdeBoasNode<T>
     {
-        public ProtoVanEmdeBoasNode(int size)
+        private static readonly int[] LeafSizeMasks = new int[] { 0b01, 0b10};
+        private const int LeafIsFull = 0b11;
+
+        public ProtoVanEmdeBoasNode(int capacity)
         {
-            if (size == 2)
+            if (capacity == 2)  // Leaf case
             {
-                data = new T[size];
+                data = new T[capacity];
             }
             else
             {
-                int childSize = Sqrt(size);
-                summary = new ProtoVanEmdeBoasNode<byte>(childSize);
-                clusters = new ProtoVanEmdeBoasNode<T>[size];
-                for (int i = 0; i < childSize; ++i)
+                int childCapacity = Sqrt(capacity);
+                summary = new ProtoVanEmdeBoasNode<byte>(childCapacity);
+                clusters = new ProtoVanEmdeBoasNode<T>[capacity];
+                for (int i = 0; i < childCapacity; ++i)
                 {
-                    clusters[i] = new ProtoVanEmdeBoasNode<T>(childSize);
+                    clusters[i] = new ProtoVanEmdeBoasNode<T>(childCapacity);
+                }
+            }
+
+            this.size = 0;
+        }
+
+        public int Size
+        {
+            get
+            {
+                if (data == null)
+                {
+                    return size;
+                }
+                else  // Leaf case
+                {
+                    return size switch
+                    {
+                        0 => 0,
+                        LeafIsFull => 2,
+                        _ => 1
+                    };
                 }
             }
         }
@@ -32,17 +55,24 @@ namespace IntegerDataStructures
         /// <returns>True if the value was inserted, false if it replaces old value</returns>
         public bool Insert(int key, T val)
         {
-            if (data != null)
+            if (data != null)  // Leaf case
             {
-                bool inserted = data[key] == null;
+                bool inserted = (size & LeafSizeMasks[key]) != LeafSizeMasks[key];
                 data[key] = val;
+                size |= LeafSizeMasks[key];
                 return inserted;
             }
             else if (clusters != null && summary != null)
             {
                 var (ClusterIndex, KeyInCluster) = DeconstructKey(key);
                 summary.Insert(KeyInCluster, 1);
-                return clusters[ClusterIndex].Insert(KeyInCluster, val);
+                bool insered = clusters[ClusterIndex].Insert(KeyInCluster, val);
+                if (insered)
+                {
+                    size++;
+                }
+
+                return insered;
             }
 
             throw new Exception("ProtoVanEmdeBoasNode is invalid");
@@ -50,7 +80,7 @@ namespace IntegerDataStructures
 
         public T Find(int key)
         {
-            if (data != null)
+            if (data != null)   // Leaf case
             {
                 return data[key];
             }
@@ -66,6 +96,7 @@ namespace IntegerDataStructures
         private ProtoVanEmdeBoasNode<byte>? summary;
         private ProtoVanEmdeBoasNode<T>[]? clusters;
         private T[]? data;
+        private int size;
 
         public static (int ClusterIndex, int KeyInCluster) DeconstructKey(int key)
         {

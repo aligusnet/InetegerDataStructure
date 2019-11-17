@@ -24,6 +24,8 @@ namespace IntegerDataStructures
             return node.Find(key);
         }
 
+        public int Size => node.Size;
+
         private static int GetCapacity(int requiredCapacity)
         {
             if (requiredCapacity <= 2)

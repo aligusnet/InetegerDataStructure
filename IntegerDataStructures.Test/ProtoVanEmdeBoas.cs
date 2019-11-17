@@ -7,7 +7,6 @@ namespace IntegerDataStructures.Test
         [Fact]
         public void DeconstructKeyTest()
         {
-            var node = new ProtoVanEmdeBoasNode<int>(10);
             Assert.Equal((0, 0), ProtoVanEmdeBoasNode<string>.DeconstructKey(0));
             Assert.Equal((0, 1), ProtoVanEmdeBoasNode<string>.DeconstructKey(1));
             Assert.Equal((1, 0), ProtoVanEmdeBoasNode<string>.DeconstructKey(2));
@@ -34,6 +33,31 @@ namespace IntegerDataStructures.Test
 
             Assert.True(tree.Insert(16, "value 16"));
             Assert.Equal("value 16", tree.Find(16));
+
+            Assert.Equal(2, tree.Size);
+
+            var intTree = new ProtoVanEmdeBoasTree<int>(111);
+            Assert.True(intTree.Insert(79, 10079));
+        }
+
+        [Fact]
+        public void TrivialTreeTest()
+        {
+            var tree = new ProtoVanEmdeBoasTree<int>(2);
+
+            Assert.Equal(0, tree.Size);
+
+            Assert.True(tree.Insert(0, 100));
+            Assert.Equal(100, tree.Find(0));
+            Assert.Equal(1, tree.Size);
+
+            Assert.False(tree.Insert(0, 10));
+            Assert.Equal(10, tree.Find(0));
+            Assert.Equal(1, tree.Size);
+
+            Assert.True(tree.Insert(1, 20));
+            Assert.Equal(20, tree.Find(1));
+            Assert.Equal(2, tree.Size);
         }
     }
 }
