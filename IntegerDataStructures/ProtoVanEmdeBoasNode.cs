@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace IntegerDataStructures
+﻿namespace IntegerDataStructures
 {
     public class ProtoVanEmdeBoasNode<T>
     {
@@ -90,7 +88,7 @@ namespace IntegerDataStructures
                 return insered;
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         public T GetValue(int key)
@@ -105,7 +103,7 @@ namespace IntegerDataStructures
                 return clusters[clusterIndex].GetValue(keyInCluster);
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         public bool Delete(int key)
@@ -138,7 +136,7 @@ namespace IntegerDataStructures
                 return deleted;
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         public int? MinimumKey()
@@ -164,7 +162,7 @@ namespace IntegerDataStructures
                 if (clusterIndex != null)
                 {
                     var offset = clusters[clusterIndex.Value].MinimumKey();
-                    if (offset != null)
+                    if (offset != null)  // must be not null
                     {
                         return ConstructKey(clusterIndex.Value, offset.Value, clusters.Length);
                     }
@@ -173,7 +171,7 @@ namespace IntegerDataStructures
                 return null;
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         public int? MaximumKey()
@@ -204,13 +202,13 @@ namespace IntegerDataStructures
                 var offset = clusters[clusterIndex.Value].MaximumKey();
                 if (offset == null)
                 {
-                    return null;
+                    throw new ContractFailedException("ProtoVanEmdeBoasNode.Summary is invalid");
                 }
 
                 return ConstructKey(clusterIndex.Value, offset.Value, clusters.Length);
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         public int? NextKey(int key)
@@ -240,17 +238,19 @@ namespace IntegerDataStructures
                     if (nextCluster != null)
                     {
                         offset = clusters[nextCluster.Value].MinimumKey();
-                        if (offset != null) // Invariant: Must be not null
+                        if (offset == null)
                         {
-                            return ConstructKey(nextCluster.Value, offset.Value, clusters.Length);
+                            throw new ContractFailedException("ProtoVanEmdeBoasNode.Summary is invalid");
                         }
+
+                        return ConstructKey(nextCluster.Value, offset.Value, clusters.Length);
                     }
 
                     return null;
                 }
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         public int? PreviousKey(int key)
@@ -275,7 +275,7 @@ namespace IntegerDataStructures
                 }
 
                 var prevCluster = summary.PreviousKey(clusterIndex);
-                if (prevCluster == null)  // Invariant: Must be not null
+                if (prevCluster == null)
                 {
                     return null;
                 }
@@ -283,13 +283,13 @@ namespace IntegerDataStructures
                 offset = clusters[prevCluster.Value].MaximumKey();
                 if (offset == null)
                 {
-                    return null;
+                    throw new ContractFailedException("ProtoVanEmdeBoasNode.Summary is invalid");
                 }
 
                 return ConstructKey(prevCluster.Value, offset.Value, clusters.Length);
             }
 
-            throw new Exception("ProtoVanEmdeBoasNode is invalid");  // Precondition
+            throw new ContractFailedException("ProtoVanEmdeBoasNode is invalid");
         }
 
         private bool ContainsInLeaf(int key)
@@ -334,7 +334,7 @@ namespace IntegerDataStructures
             }
             else
             {
-                throw new ArgumentException("Values bigger than 65536 are not supported");
+                throw new System.ArgumentException("Values bigger than 65536 are not supported");
             }
         }
     }
