@@ -243,6 +243,8 @@ namespace IntegerDataStructures
                     throw new ContractFailedException("The summary is broken");
                 }
 
+                cluster[k.clusterIndex] = default!;
+
                 if (key == maxKey)
                 {
                     var summaryMax = summary.MaximumKey();
