@@ -146,6 +146,9 @@ namespace IntegerDataStructures.Test
             Assert.Equal(55, tree.NextKey(33));
             Assert.Equal(100, tree.NextKey(77));
 
+            Assert.True(tree.Delete(33));
+            Assert.Equal(55, tree.NextKey(10));
+
             for (int i = 0; i < tree.Capacity; ++i)
             {
                 tree.Insert(i, i*100);

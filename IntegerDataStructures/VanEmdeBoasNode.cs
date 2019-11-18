@@ -2,7 +2,7 @@
 
 namespace IntegerDataStructures
 {
-    public class VanEmdeBoasNode<T>
+    internal class VanEmdeBoasNode<T>
     {
         private const int InvalidKey = -1;
 
@@ -12,8 +12,6 @@ namespace IntegerDataStructures
             maxKey = InvalidKey;
             minValue = default!;
             maxValue = default!;
-
-            Count = 0;
 
             if (universeSize != 2)
             {
@@ -25,8 +23,6 @@ namespace IntegerDataStructures
                 cluster = new VanEmdeBoasNode<T>[ceiling];
             }
         }
-
-        public int Count { get; private set; }
 
         public int Capacity
         {
@@ -123,7 +119,6 @@ namespace IntegerDataStructures
             if (minKey == InvalidKey)
             {
                 InsertIntoEmpty(key, value);
-                ++Count;
                 return true;
             }
 
@@ -156,19 +151,128 @@ namespace IntegerDataStructures
                 maxValue = value;
             }
 
-            if (inserted)
-            {
-                ++Count;
-            }
-
             return inserted;
         }
 
-        public bool InsertIntoEmpty(int key, T value)
+        private bool InsertIntoEmpty(int key, T value)
         {
-            minKey = key;
-            minValue = value;
+            minKey = maxKey = key;
+            minValue = maxValue = value;
             return true;
+        }
+
+        public bool Delete(int key)
+        {
+            if (Contains(key))
+            {
+                InternalDelete(key);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool InternalDelete(int key)
+        {
+            if (minKey == InvalidKey && maxKey == InvalidKey)
+            {
+                return false;
+            }
+
+            if (minKey == maxKey)
+            {
+                minKey = InvalidKey;
+                maxKey = InvalidKey;
+                minValue = default!;
+                maxValue = default!;
+
+                return true;
+            }
+
+            if (cluster == null || summary == null)
+            {
+                if (key == 0)
+                {
+                    minKey = 1;
+                    minValue = maxValue;
+                }
+                else
+                {
+                    minKey = 0;
+                    maxValue = minValue;
+                }
+                maxKey = minKey;
+
+                return true;
+            }
+
+            if (key == minKey)
+            {
+                var firstCluster = summary.MinimumKey();
+                if (!firstCluster.HasValue)
+                {
+                    throw new ContractFailedException("The node must not be empty");
+                }
+
+                var keyInCluster = cluster[firstCluster.Value].MinimumKey();
+                if (!keyInCluster.HasValue)
+                {
+                    throw new ContractFailedException("The child node must not be empty");
+                }
+
+                key = ConstructKey(firstCluster.Value, keyInCluster.Value);
+
+
+                minValue = GetValue(key);
+                minKey = key;
+
+            }
+
+            var k = DeconstructKey(key);
+            if (cluster[k.clusterIndex] == null)
+            {
+                return false;
+            }
+
+            bool deleted = cluster[k.clusterIndex].InternalDelete(k.keyInCluster);
+            var maximum = cluster[k.clusterIndex].MaximumKey();
+            if (maximum == null)
+            {
+                if (!summary.InternalDelete(k.clusterIndex))
+                {
+                    throw new ContractFailedException("The summary is broken");
+                }
+
+                if (key == maxKey)
+                {
+                    var summaryMax = summary.MaximumKey();
+                    if (summaryMax == null)
+                    {
+                        maxKey = minKey;
+                        maxValue = minValue;
+                    }
+                    else
+                    {
+                        var maxMaxKey = cluster[summaryMax.Value].MaximumKey();
+                        if (maxMaxKey == null)
+                        {
+                            throw new ContractFailedException("The child node must be non-empty");
+                        }
+
+                        var tmpKey = ConstructKey(summaryMax.Value, maxMaxKey.Value);
+                        maxValue = GetValue(tmpKey);
+                        maxKey = tmpKey;
+                    }
+                }
+            }
+            else if (maxKey == key)
+            {
+                var tmpKey = ConstructKey(k.clusterIndex, maximum.Value);
+                maxValue = GetValue(tmpKey);
+                maxKey = tmpKey;
+            }
+
+            return deleted;
         }
 
         private VanEmdeBoasNode<T> GetChild(int index)
@@ -191,6 +295,11 @@ namespace IntegerDataStructures
             int high = key / childUniverseSize;
             int low = key % childUniverseSize;
             return (high, low);
+        }
+
+        private int ConstructKey(int clusterIndex, int keyInCluster)
+        {
+            return clusterIndex * childUniverseSize + keyInCluster;
         }
 
         private readonly VanEmdeBoasNode<byte>? summary;
