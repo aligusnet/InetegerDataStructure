@@ -12,6 +12,8 @@ namespace IntegerDataStructures.Test
         {
             var node = new VanEmdeBoasNode<string>(universeSize);
 
+            Assert.Equal(universeSize, node.Capacity);
+
             for (int i = 0; i < universeSize; ++i)
             {
                 Assert.False(node.Contains(i));

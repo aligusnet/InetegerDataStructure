@@ -28,6 +28,21 @@ namespace IntegerDataStructures
 
         public int Count { get; private set; }
 
+        public int Capacity
+        {
+            get
+            {
+                if (cluster != null)
+                {
+                    return cluster.Length * childUniverseSize;
+                }
+                else
+                {
+                    return 2;
+                }
+            }
+        }
+
         public int? MinimumKey()
         {
             if (minKey == InvalidKey)
