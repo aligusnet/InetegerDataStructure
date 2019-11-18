@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics;
 
 namespace IntegerDataStructures
 {
@@ -18,14 +18,11 @@ namespace IntegerDataStructures
             if (universeSize != 2)
             {
                 var (floor, ceiling) = Sqrt(universeSize);
+                Debug.Assert(floor * ceiling == universeSize, "Sqrt is wrong!");
+
                 childUniverseSize = floor;
                 summary = new VanEmdeBoasNode<byte>(ceiling);
                 cluster = new VanEmdeBoasNode<T>[ceiling];
-
-                if (childUniverseSize * ceiling != universeSize)
-                {
-                    throw new Exception("Sqrt is wrong");
-                }
             }
         }
 
@@ -189,12 +186,18 @@ namespace IntegerDataStructures
         private T minValue;
         private T maxValue;
 
+        // the function expects that val is power of 2 and bigger than 2
         private static (int floor, int ceiling) Sqrt(int val)
         {
-            int power = (int)Math.Log(val, 2);
+            int power;
+            for (power = 0; val != 1; ++power)
+            {
+                val >>= 1;
+            }
+
             int floorPower = power / 2;
             int ceilingPower = power - floorPower;
-            return ((int)Math.Pow(2, floorPower), (int)Math.Pow(2, ceilingPower));
+            return (1 << floorPower, 1 << ceilingPower);
         }
 
         private static void Swap<K>(ref K lhs, ref K rhs)
