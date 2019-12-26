@@ -47,6 +47,10 @@ namespace IntegerDataStructures
 
         public int? MinimumKey => node.MinimumKey();
 
+        public int? NextKey(int key) => node.NextKey(key);
+
+        public int? PreviousKey(int key) => node.PreviousKey(key);
+
         public bool Delete(int key)
         {
             CheckKey(key);

@@ -59,6 +59,111 @@ namespace IntegerDataStructures
             return maxKey;
         }
 
+        public int? NextKey(int key)
+        {
+            if (cluster == null || summary == null)
+            {
+                if (key == 0 && maxKey == 1)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (minKey != InvalidKey && key < minKey)
+            {
+                return minKey;
+            }
+            else
+            {
+                var (clusterIndex, keyInCluster) = DeconstructKey(key);
+
+                var maxLow = cluster[clusterIndex]?.MaximumKey();
+                if (maxLow.HasValue && keyInCluster < maxLow.Value)
+                {
+                    var offset = cluster[clusterIndex].NextKey(keyInCluster);
+                    if (offset == null)
+                    {
+                        throw new ContractFailedException("VanEmdeBoasNode.Summary is invalid");
+                    }
+
+                    return ConstructKey(clusterIndex, offset.Value);
+                }
+                else
+                {
+                    var nextClusterIndex = summary.NextKey(clusterIndex);
+                    if (nextClusterIndex != null)
+                    {
+                        var offset = cluster[nextClusterIndex.Value].MinimumKey();
+                        if (offset == null)
+                        {
+                            throw new ContractFailedException("VanEmdeBoasNode.Summary is invalid");
+                        }
+
+                        return ConstructKey(nextClusterIndex.Value, offset.Value);
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        public int? PreviousKey(int key)
+        {
+            if (cluster == null || summary == null)
+            {
+                if (key == 1 && minKey == 0)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (maxKey != InvalidKey && key > maxKey)
+            {
+                return maxKey;
+            }
+            else
+            {
+                var (clusterIndex, keyInCluster) = DeconstructKey(key);
+                var minLow = cluster[clusterIndex]?.MinimumKey();
+                if (minLow.HasValue && keyInCluster > minLow.Value)
+                {
+                    var offset = cluster[clusterIndex]?.PreviousKey(keyInCluster);
+                    if (offset == null)
+                    {
+                        throw new ContractFailedException("VanEmdeBoasNode.Summary is invalid");
+                    }
+
+                    return ConstructKey(clusterIndex, offset.Value);
+                }
+                else
+                {
+                    var prevClusterIndex = summary.PreviousKey(clusterIndex);
+                    if (prevClusterIndex != null)
+                    {
+                        var offset = cluster[prevClusterIndex.Value]?.MaximumKey();
+                        if (offset == null)
+                        {
+                            throw new ContractFailedException("VanEmdeBoasNode.Summary is invalid");
+                        }
+
+                        return ConstructKey(prevClusterIndex.Value, offset.Value);
+                    }
+                    else
+                    {
+                        return (minKey != InvalidKey && key > minKey) ? (int?)minKey : null;
+                    }
+                }
+            }
+        }
+
         public bool Contains(int key)
         {
             if (minKey == key || maxKey == key)

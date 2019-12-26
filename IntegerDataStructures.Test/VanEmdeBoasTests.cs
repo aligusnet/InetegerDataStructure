@@ -123,5 +123,63 @@ namespace IntegerDataStructures.Test
             Assert.Throws<ArgumentOutOfRangeException>(() => tree.Insert(100, 1));
         }
 
+        [Fact]
+        public void NextKeyTest()
+        {
+            var tree = new VanEmdeBoasTree<int>(111);
+            tree.Insert(100, 1100);
+            tree.Insert(77, 1077);
+            tree.Insert(33, 1033);
+            tree.Insert(55, 1055);
+
+            Assert.Null(tree.NextKey(100));
+            Assert.Equal(100, tree.NextKey(77));
+            Assert.Equal(33, tree.NextKey(10));
+            Assert.Equal(55, tree.NextKey(33));
+            Assert.Equal(100, tree.NextKey(77));
+
+            Assert.True(tree.Delete(33));
+            Assert.Equal(55, tree.NextKey(10));
+
+            for (int i = 0; i < tree.Capacity; ++i)
+            {
+                tree.Insert(i, i * 100);
+            }
+
+            for (int i = 0; i < tree.Capacity - 1; ++i)
+            {
+                Assert.Equal(i + 1, tree.NextKey(i));
+            }
+
+            Assert.Null(tree.NextKey(tree.Capacity - 1));
+        }
+
+        [Fact]
+        public void PreviousKeyTest()
+        {
+            var tree = new VanEmdeBoasTree<int>(111);
+            tree.Insert(100, 1100);
+            tree.Insert(77, 1077);
+            tree.Insert(33, 1033);
+            tree.Insert(55, 1055);
+
+            Assert.Null(tree.PreviousKey(33));
+            Assert.Equal(77, tree.PreviousKey(100));
+            Assert.Equal(33, tree.PreviousKey(55));
+            Assert.Equal(100, tree.PreviousKey(110));
+
+            for (int i = 0; i < tree.Capacity; ++i)
+            {
+                tree.Insert(i, i * 100);
+            }
+
+            for (int i = 1; i < tree.Capacity; ++i)
+            {
+                Assert.Equal(i - 1, tree.PreviousKey(i));
+            }
+
+            Assert.Null(tree.PreviousKey(0));
+        }
+
     }
 }
